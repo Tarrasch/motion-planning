@@ -1,0 +1,19 @@
+<world name="sphere_scene">
+  <!-- include the models here by referenceing their URDFs -->
+  <include filename="floor.urdf" model_name="floor"/>
+  <include filename="sphere_red.urdf" model_name="sphere_red"/>
+  <include filename="sphere_blue.urdf" model_name="sphere_blue"/>
+  
+  <!-- construct world -->
+  <entity model="floor" name="floor">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </entity>
+
+  <entity model="sphere_red" name="sphere 1">
+    <origin xyz="0 3 1" rpy="0 0 0"/>
+  </entity>
+  <entity model="sphere_blue" name="sphere 2">
+    <origin xyz="0 -3 1" rpy="0 0 0"/>
+  </entity>
+
+</world>
