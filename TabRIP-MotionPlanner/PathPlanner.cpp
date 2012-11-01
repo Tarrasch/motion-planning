@@ -106,7 +106,7 @@ bool PathPlanner::planSingleTreeRrt( int _robotId,
   RRT::StepResult result = RRT::STEP_PROGRESS;
 
   double smallestGap = DBL_MAX;
-
+  int count = 0;
   while ( result != RRT::STEP_REACHED && smallestGap > stepSize ) {
 
     /** greedy section */
@@ -116,14 +116,24 @@ bool PathPlanner::planSingleTreeRrt( int _robotId,
       if( _connect ) {
 
 	// ================ YOUR CODE HERE ===============
-
+	if(count++%2){
+	rrt.connect();
+	}
+	else{
+	rrt.connect(_goal);
+	}
 	// ===============================================
 
 	/** greedy and NO connect */
       } else {
 
 	// ================== YOUR CODE HERE ===================
-
+	if(count++%2){
+		rrt.tryStep();
+	}
+	else{
+		rrt.tryStep(_goal);
+	}
 	// =====================================================
 
       }
@@ -175,7 +185,7 @@ bool PathPlanner::planBidirectionalRrt( int _robotId,
 
   // ============= YOUR CODE HERE ======================
   // HINT: Remember trees grow towards each other!
-
+  
   return true;
   // ===================================================
 
