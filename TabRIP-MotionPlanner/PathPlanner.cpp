@@ -176,12 +176,45 @@ bool PathPlanner::planBidirectionalRrt( int _robotId,
                                         bool _greedy, // no effect here
                                         unsigned int _maxNodes ) {
 
-  // ============= YOUR CODE HERE ======================
-  // HINT: Remember trees grow towards each other!
-  
-  return true;
-  // ===================================================
+  RRT rrt_start( world, _robotId, _links, _start, stepSize );
+  RRT rrt_goal( world, _robotId, _links, _goal, stepSize );
 
+  double smallestGap = DBL_MAX;
+  int count = 0;
+  bool b = false;
+  while ( smallestGap > stepSize ) {
+    b ^=1;
+    RRT &rrt_1 = b ? rrt_start : rrt_goal;
+    RRT &rrt_2 = b ? rrt_goal  : rrt_start;
+
+    /** and connect */
+    if( _connect ) {
+      rrt_1.connect();
+      rrt_2.connect(rrt_1.configVector[rrt_1.activeNode]);
+    } else { // !_connect
+      rrt_1.tryStep();
+      rrt_2.tryStep(rrt_1.configVector[rrt_1.activeNode]);
+    }
+
+    if( _maxNodes > 0 && rrt_start.getSize()*2 > _maxNodes ) {
+      printf("--(!) Exceeded maximum of %d nodes. No path found (!)--\n", _maxNodes );
+      return false;
+    }
+
+    double gap = rrt_2.getGap( rrt_1.configVector[rrt_1.activeNode] );
+
+    if( gap < smallestGap ) {
+      smallestGap = gap;
+      std::cout << "--> [planner] Gap: " << smallestGap << "  Tree size: " << rrt_2.configVector.size() << std::endl;
+    }
+  } // End of while
+
+  /// Save path
+  printf(" --> Trees met! : Gap: %.3f \n", smallestGap );
+  rrt_start.tracePath( rrt_start.activeNode, path, false );
+  rrt_goal.tracePath( rrt_goal.activeNode, path, true );
+
+  return true;
 }
 
 
