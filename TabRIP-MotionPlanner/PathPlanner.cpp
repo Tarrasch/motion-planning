@@ -157,7 +157,7 @@ bool PathPlanner::planSingleTreeRrt( int _robotId,
     }
   } // End of while
 
-    /// Save path
+  /// Save path
   printf(" --> Reached goal! : Gap: %.3f \n", rrt.getGap( _goal ) );
   rrt.tracePath( rrt.activeNode, path, false );
 
