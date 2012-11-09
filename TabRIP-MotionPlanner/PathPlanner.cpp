@@ -89,7 +89,11 @@ bool PathPlanner::planPath( int _robotId,
   return result;
 }
 
-
+int randomNumber(int min, int max){
+  int t = rand() % max + min;
+  std::cout << "Rand: " << t << std::endl;
+  return t;
+}
 /**
  * @function planSingleRRT
  * @brief Finds a plan using a standard RRT
@@ -104,9 +108,8 @@ bool PathPlanner::planSingleTreeRrt( int _robotId,
 
   RRT rrt( world, _robotId, _links, _start, stepSize );
   RRT::StepResult result = RRT::STEP_PROGRESS;
-
+  
   double smallestGap = DBL_MAX;
-  int count = 0;
   while ( result != RRT::STEP_REACHED && smallestGap > stepSize ) {
 
     /** greedy section */
@@ -115,19 +118,22 @@ bool PathPlanner::planSingleTreeRrt( int _robotId,
       /** greedy and connect */
       if( _connect ) {
 
-        if(count++%2){
-          rrt.connect();
+        if(randomNumber(0,7) == 1){
+          rrt.connect(_goal);
+          std::cout << "Connect greedy!" << std::endl;
         }
         else{
-          rrt.connect(_goal);
+          rrt.connect();
+          std::cout << "Connect!" << std::endl;
         }
       } else {
-
-        if(count++%2){
-          rrt.tryStep();
+        if(randomNumber(0,7) == 1){
+          rrt.tryStep(_goal);
+          std::cout << "greedy!" << std::endl;
         }
         else{
-          rrt.tryStep(_goal);
+          rrt.tryStep();
+          std::cout << "Simple!" << std::endl;
         }
       }
 
@@ -144,9 +150,9 @@ bool PathPlanner::planSingleTreeRrt( int _robotId,
       }
 
     }
-
-    if( _maxNodes > 0 && rrt.getSize() > _maxNodes ) {
-      printf("--(!) Exceeded maximum of %d nodes. No path found (!)--\n", _maxNodes );
+    
+    if( _maxNodes > 0 && rrt.getSize() > _maxNodes*2 ) {
+      printf("--(!) Exceeded maximum of %d nodes. No path found (!)--\n", _maxNodes*2 );
       return false;
     }
 
@@ -154,6 +160,7 @@ bool PathPlanner::planSingleTreeRrt( int _robotId,
     if( gap < smallestGap ) {
       smallestGap = gap;
       std::cout << "--> [planner] Gap: " << smallestGap << "  Tree size: " << rrt.configVector.size() << std::endl;
+      std::cout <<"--RRT Size: " << rrt.getSize() << std::endl;
     }
   } // End of while
 
@@ -176,11 +183,11 @@ bool PathPlanner::planBidirectionalRrt( int _robotId,
                                         bool _greedy, // no effect here
                                         unsigned int _maxNodes ) {
 
+  std::cout << "Hello" << std::endl; 
   RRT rrt_start( world, _robotId, _links, _start, stepSize );
   RRT rrt_goal( world, _robotId, _links, _goal, stepSize );
-
+  
   double smallestGap = DBL_MAX;
-  int count = 0;
   bool b = false;
   while ( smallestGap > stepSize ) {
     b ^=1;
@@ -248,8 +255,33 @@ void PathPlanner::smoothPath( int _robotId,
                               std::list<Eigen::VectorXd> &_path ) {
 
   // =========== YOUR CODE HERE ==================
-  // HINT: Use whatever technique you like better, first try to shorten a path and then you can try to make it smoother
-
+  std::cout << "Path size: "<< _path.size() << std::endl;
+  std::list<Eigen::VectorXd>::iterator start;
+  std::list<Eigen::VectorXd>::iterator next;
+  
+  start = _path.begin();
+  
+  next = _path.begin();
+  next++;
+  
+  while(next != _path.end()){
+    	std::list<Eigen::VectorXd>::iterator mid = next;
+    	if(++next == _path.end()){
+    	  break;
+    	}
+    	bool check = checkPathSegment(_robotId, _links, *start, *next);
+    	if(check){
+    	  _path.erase(mid);
+    	  next++;
+    	}
+    	else{
+    	  start++;
+    	  next++;
+    	}
+  }
+  std::cout << "Path size after: "<< _path.size() << std::endl;
+  //smoothing pending
+  
   return;
   // ========================================
 }

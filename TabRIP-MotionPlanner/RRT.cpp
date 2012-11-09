@@ -34,7 +34,7 @@ RRT::RRT( robotics::World *_world,
   stepSize = _stepSize;
 
   /// Initialize random generator
-  srand( time(NULL) );
+  srand( 0 );//deterministic change
 
   /// Create kdtree and add the first node (start)
   kdTree = kd_create( ndim );
