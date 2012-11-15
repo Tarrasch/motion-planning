@@ -233,7 +233,9 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
       std::cout << "(i) Setting Start state for " << mWorld->getRobot(mRobotId)->getName() << ":" << std::endl;
 
       mStartConf = mWorld->getRobot(mRobotId)->getQuickDofs();
-
+      mSelectedObject->getPositionXYZ(start_x,start_y,start_z);
+      object = mSelectedObject;
+      
       for( unsigned int i = 0; i < mStartConf.size(); i++ )
 	{  std::cout << mStartConf(i) << " ";  }
       std::cout << std::endl;
@@ -252,6 +254,7 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
       std::cout << "(i) Setting Goal state for " << mWorld->getRobot(mRobotId)->getName() << ":" << std::endl;
 
       mGoalConf = mWorld->getRobot(mRobotId)->getQuickDofs();
+      mSelectedObject->getPositionXYZ(goal_x,goal_y,goal_z);
 
       for( unsigned int i = 0; i < mGoalConf.size(); i++ )
 	{ std::cout << mGoalConf(i) << " "; }
@@ -269,12 +272,14 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
     }
 
     mWorld->getRobot(mRobotId)->setQuickDofs( mStartConf );
-
+    object->setPositionXYZ(start_x,start_y,start_z);
+    
     for( unsigned int i = 0; i< mStartConf.size(); i++ )
       {  std::cout << mStartConf(i) << " "; }
     std::cout << std::endl;
 
     mWorld->getRobot(mRobotId)->update();
+    object->update();
     viewer->UpdateCamera();
     break;
 
@@ -286,12 +291,14 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
     }
 
     mWorld->getRobot(mRobotId)->setQuickDofs( mGoalConf );
-
+    object->setPositionXYZ(goal_x,goal_y,goal_z);
+    
     for( unsigned int i = 0; i< mGoalConf.size(); i++ )
       {  std::cout << mGoalConf[i] << " ";  }
     std::cout << std::endl;
 
     mWorld->getRobot(mRobotId)->update();
+    object->update();
     viewer->UpdateCamera();
     break;
 

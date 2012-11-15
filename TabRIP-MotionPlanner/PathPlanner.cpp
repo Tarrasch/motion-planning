@@ -254,7 +254,7 @@ void PathPlanner::smoothPath( int _robotId,
                               const Eigen::VectorXi &_links,
                               std::list<Eigen::VectorXd> &_path ) {
 
-  // =========== YOUR CODE HERE ==================
+  //step 1: shortening
   std::cout << "Path size: "<< _path.size() << std::endl;
   std::list<Eigen::VectorXd>::iterator start;
   std::list<Eigen::VectorXd>::iterator next;
@@ -280,7 +280,7 @@ void PathPlanner::smoothPath( int _robotId,
     	}
   }
   std::cout << "Path size after: "<< _path.size() << std::endl;
-  //smoothing pending
+  //step 2: smoothing pending
   
   return;
   // ========================================
