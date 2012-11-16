@@ -65,7 +65,8 @@ public:
     void OnCheckBox(wxCommandEvent &evt);
     void SetTimeline();
     void GRIPStateChange();
-
+    void AttachObject();
+    
     // Thread specific
     // GRIPThread* thread;
 

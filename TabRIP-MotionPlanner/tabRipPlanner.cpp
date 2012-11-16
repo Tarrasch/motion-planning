@@ -348,27 +348,10 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
       mPlanner = new PathPlanner( *mWorld, false, stepSize );
       //wxThread planThread;
       //planThread.Create();
-      object->setMovable(true);
+      
       mLinks = mWorld->getRobot(mRobotId)->getQuickDofsIndices();
-      PRINT(mLinks.size())
-      //print states for debugging
-      PRINT(object->getNode(0)->getName());
-      PRINT(object->getNode(1)->getName());
-      PRINT(mWorld->getRobot(mRobotId)->getNode("FT")->getName());
-      PRINT(mWorld->getRobot(mRobotId)->getNumJoints());
       
-      kinematics::BodyNode *last = mWorld->getRobot(mRobotId)->getNode("FT");
-      kinematics::Joint *obj_joint = new kinematics::Joint(last, object->getNode(1), "object_joint");
-      mWorld->getRobot(mRobotId)->addJoint(obj_joint);
-      mWorld->getRobot(mRobotId)->addNode(object->getNode(1));
-      
-      mWorld->getRobot(mRobotId)->update();
-      object->update();
-      mLinks = mWorld->getRobot(mRobotId)->getQuickDofsIndices();
-      PRINT(mLinks.size())
-      PRINT(mWorld->getRobot(mRobotId)->getNumJoints());
-      
-      //PRINT(mWorld->getRobot(mRobotId)->getNode()->
+      AttachObject();
       int maxNodes = 5000;
       bool result = mPlanner->planPath( mRobotId,
 					mLinks,
@@ -402,6 +385,16 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
     }
     break;
   }
+}
+
+void RipPlannerTab::AttachObject(){
+  object->setMovable(true);
+  kinematics::BodyNode *last = mWorld->getRobot(mRobotId)->getNode("FT");
+  kinematics::Joint *obj_joint = new kinematics::Joint(last, object->getNode(1), "object_joint");
+  mWorld->getRobot(mRobotId)->addJoint(obj_joint);
+  mWorld->getRobot(mRobotId)->addNode(object->getNode(1)); 
+  mWorld->getRobot(mRobotId)->update();
+  object->update();
 }
 
 /**
