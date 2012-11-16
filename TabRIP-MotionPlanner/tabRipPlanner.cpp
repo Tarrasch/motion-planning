@@ -235,7 +235,7 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
       mStartConf = mWorld->getRobot(mRobotId)->getQuickDofs();
       mSelectedObject->getPositionXYZ(start_x,start_y,start_z);
       object = mSelectedObject;
-      
+      object->update();
       for( unsigned int i = 0; i < mStartConf.size(); i++ )
 	{  std::cout << mStartConf(i) << " ";  }
       std::cout << std::endl;
@@ -358,8 +358,9 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
       PRINT(mWorld->getRobot(mRobotId)->getNumJoints());
       
       kinematics::BodyNode *last = mWorld->getRobot(mRobotId)->getNode("FT");
-      kinematics::Joint *obj_joint = new kinematics::Joint(last, object->getNode(1), "new_joint");
+      kinematics::Joint *obj_joint = new kinematics::Joint(last, object->getNode(1), "object_joint");
       mWorld->getRobot(mRobotId)->addJoint(obj_joint);
+      mWorld->getRobot(mRobotId)->addNode(object->getNode(1));
       
       mWorld->getRobot(mRobotId)->update();
       object->update();
@@ -367,6 +368,7 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
       PRINT(mLinks.size())
       PRINT(mWorld->getRobot(mRobotId)->getNumJoints());
       
+      //PRINT(mWorld->getRobot(mRobotId)->getNode()->
       int maxNodes = 5000;
       bool result = mPlanner->planPath( mRobotId,
 					mLinks,
@@ -429,7 +431,7 @@ void RipPlannerTab::SetTimeline() {
 
         mWorld->getRobot( mRobotId)->setQuickDofs( *it );
 				mWorld->getRobot(mRobotId)->update();
-
+        
         frame->AddWorld( mWorld );
     }
 
