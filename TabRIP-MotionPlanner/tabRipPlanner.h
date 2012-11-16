@@ -15,7 +15,7 @@
 #include <robotics/Robot.h>
 #include <robotics/Object.h>
 #include <dynamics/BodyNodeDynamics.h>
-
+#include <kinematics/Joint.h>
 #include "PathPlanner.h"
 
 #include <iostream>
