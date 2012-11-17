@@ -19,6 +19,7 @@
 
 #include <Tabs/AllTabs.h>
 #include <GRIPApp.h>
+#include "JTFollower/JTFollower.h" 
 #define PRINT(x) std::cout << #x << " = " << x << std::endl;
 
 /* Quick intro to adding tabs:
@@ -351,9 +352,49 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
       
       mLinks = mWorld->getRobot(mRobotId)->getQuickDofsIndices();
       
-      AttachObject();
+      //get goalConf
+      JTFollower *jt = new JTFollower(*mWorld); 
+      int mNumLinks = mWorld->getRobot(mRobotId)->getNumQuickDofs(); 
+      int EEDofId = mLinks( mNumLinks - 1 );
+      int mEEId = mWorld->getRobot(mRobotId)->getDof( EEDofId )->getJoint()->getChildNode()->getSkelIndex();
+      std::string mEEName =  mWorld->getRobot(mRobotId)->getNode(mEEId)->getName();
+      jt->init( mRobotId, mLinks, mEEName, mEEId, 0.02 ); 
+      
+      Eigen::VectorXd startXYZ = jt->GetXYZ(mStartConf);
+      Eigen::VectorXd mTargetXYZ;
+      mTargetXYZ.resize(3);
+	    mTargetXYZ << start_x, start_y, start_z; 
+      
+      PRINT(mTargetXYZ);
+      PRINT(startXYZ);
+      mTargetXYZ = (mTargetXYZ - startXYZ) * 0.8 + startXYZ;
+      PRINT(mTargetXYZ);
+      PRINT(startXYZ);
+      
+      std::vector<Eigen::VectorXd> wsPath; 
+      Eigen::VectorXd start = mStartConf;
+      Eigen::VectorXd oldstart = mStartConf;
+      Eigen::VectorXd mPartialConf; 
+      if( jt->GoToXYZ( start,  
+		       mTargetXYZ,  
+		       wsPath ) == true ){
+		       mPartialConf = wsPath.back();
+		       PRINT(wsPath.size());
+		  }
+		  
+		  
       int maxNodes = 5000;
-      bool result = mPlanner->planPath( mRobotId,
+      bool result_first = mPlanner->planPath( mRobotId,
+					mLinks,
+					mStartConf,
+					mPartialConf,
+					mRrtStyle,
+					mConnectMode,
+					mGreedyMode,
+					mSmooth,
+					maxNodes );
+		  PRINT(result_first);
+			bool result_second = true;/*mPlanner->planPath( mRobotId,
 					mLinks,
 					mStartConf,
 					mGoalConf,
@@ -361,8 +402,8 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
 					mConnectMode,
 					mGreedyMode,
 					mSmooth,
-					maxNodes );
-      if( result  )
+					maxNodes );*/
+      if( result_first && result_second  )
 	{  SetTimeline(); }
     }
     break;

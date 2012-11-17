@@ -183,7 +183,6 @@ bool PathPlanner::planBidirectionalRrt( int _robotId,
                                         bool _greedy, // no effect here
                                         unsigned int _maxNodes ) {
 
-  std::cout << "Hello" << std::endl; 
   RRT rrt_start( world, _robotId, _links, _start, stepSize );
   RRT rrt_goal( world, _robotId, _links, _goal, stepSize );
   

@@ -17,6 +17,8 @@
 #include <dynamics/BodyNodeDynamics.h>
 #include <kinematics/Joint.h>
 #include "PathPlanner.h"
+#include <kinematics/Joint.h> 
+#include <kinematics/Dof.h> 
 
 #include <iostream>
 
