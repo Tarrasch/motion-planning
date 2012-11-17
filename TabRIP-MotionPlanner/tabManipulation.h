@@ -42,8 +42,9 @@ public:
     bool mGreedyMode;
     bool mConnectMode;
     bool mSmooth;
-    PathPlanner *mPlanner;
-
+    PathPlanner *mFirstPlanner;
+    PathPlanner *mSecondPlanner;
+    
     wxTextCtrl *mTimeText;
 
     // public vars to capture external selection stuff

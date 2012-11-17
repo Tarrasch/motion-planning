@@ -234,9 +234,7 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
       std::cout << "(i) Setting Start state for " << mWorld->getRobot(mRobotId)->getName() << ":" << std::endl;
 
       mStartConf = mWorld->getRobot(mRobotId)->getQuickDofs();
-      mSelectedObject->getPositionXYZ(start_x,start_y,start_z);
-      object = mSelectedObject;
-      object->update();
+     
       for( unsigned int i = 0; i < mStartConf.size(); i++ )
 	{  std::cout << mStartConf(i) << " ";  }
       std::cout << std::endl;
@@ -255,7 +253,6 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
       std::cout << "(i) Setting Goal state for " << mWorld->getRobot(mRobotId)->getName() << ":" << std::endl;
 
       mGoalConf = mWorld->getRobot(mRobotId)->getQuickDofs();
-      mSelectedObject->getPositionXYZ(goal_x,goal_y,goal_z);
 
       for( unsigned int i = 0; i < mGoalConf.size(); i++ )
 	{ std::cout << mGoalConf(i) << " "; }
@@ -273,14 +270,12 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
     }
 
     mWorld->getRobot(mRobotId)->setQuickDofs( mStartConf );
-    object->setPositionXYZ(start_x,start_y,start_z);
-    
+   
     for( unsigned int i = 0; i< mStartConf.size(); i++ )
       {  std::cout << mStartConf(i) << " "; }
     std::cout << std::endl;
 
     mWorld->getRobot(mRobotId)->update();
-    object->update();
     viewer->UpdateCamera();
     break;
 
@@ -292,14 +287,12 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
     }
 
     mWorld->getRobot(mRobotId)->setQuickDofs( mGoalConf );
-    object->setPositionXYZ(goal_x,goal_y,goal_z);
     
     for( unsigned int i = 0; i< mGoalConf.size(); i++ )
       {  std::cout << mGoalConf[i] << " ";  }
     std::cout << std::endl;
 
     mWorld->getRobot(mRobotId)->update();
-    object->update();
     viewer->UpdateCamera();
     break;
 
@@ -352,49 +345,8 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
       
       mLinks = mWorld->getRobot(mRobotId)->getQuickDofsIndices();
       
-      /*get goalConf
-      JTFollower *jt = new JTFollower(*mWorld); 
-      int mNumLinks = mWorld->getRobot(mRobotId)->getNumQuickDofs(); 
-      int EEDofId = mLinks( mNumLinks - 1 );
-      int mEEId = mWorld->getRobot(mRobotId)->getDof( EEDofId )->getJoint()->getChildNode()->getSkelIndex();
-      std::string mEEName =  mWorld->getRobot(mRobotId)->getNode(mEEId)->getName();
-      jt->init( mRobotId, mLinks, mEEName, mEEId, 0.02 ); 
-      
-      Eigen::VectorXd startXYZ = jt->GetXYZ(mStartConf);
-      Eigen::VectorXd mTargetXYZ;
-      mTargetXYZ.resize(3);
-	    mTargetXYZ << start_x, start_y, start_z; 
-      
-      PRINT(mTargetXYZ);
-      PRINT(startXYZ);
-      mTargetXYZ = (mTargetXYZ - startXYZ) * 0.8 + startXYZ;
-      PRINT(mTargetXYZ);
-      PRINT(startXYZ);
-      
-      std::vector<Eigen::VectorXd> wsPath; 
-      Eigen::VectorXd start = mStartConf;
-      Eigen::VectorXd oldstart = mStartConf;
-      Eigen::VectorXd mPartialConf; 
-      if( jt->GoToXYZ( start,  
-		       mTargetXYZ,  
-		       wsPath ) == true ){
-		       mPartialConf = wsPath.back();
-		       PRINT(wsPath.size());
-		  }*/
-		  
-		  Eigen::VectorXd mPartialConf; 
       int maxNodes = 5000;
-      bool result_first = mPlanner->planPath( mRobotId,
-					mLinks,
-					mStartConf,
-					mPartialConf,
-					mRrtStyle,
-					mConnectMode,
-					mGreedyMode,
-					mSmooth,
-					maxNodes );
-		  PRINT(result_first);
-			bool result_second = true;/*mPlanner->planPath( mRobotId,
+      bool results = mPlanner->planPath( mRobotId,
 					mLinks,
 					mStartConf,
 					mGoalConf,
@@ -402,8 +354,9 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
 					mConnectMode,
 					mGreedyMode,
 					mSmooth,
-					maxNodes );*/
-      if( result_first && result_second  )
+					maxNodes );
+		  
+      if( results )
 	{  SetTimeline(); }
     }
     break;
@@ -426,16 +379,6 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
     }
     break;
   }
-}
-
-void RipPlannerTab::AttachObject(){
-  object->setMovable(true);
-  kinematics::BodyNode *last = mWorld->getRobot(mRobotId)->getNode("FT");
-  kinematics::Joint *obj_joint = new kinematics::Joint(last, object->getNode(1), "object_joint");
-  mWorld->getRobot(mRobotId)->addJoint(obj_joint);
-  mWorld->getRobot(mRobotId)->addNode(object->getNode(1)); 
-  mWorld->getRobot(mRobotId)->update();
-  object->update();
 }
 
 /**

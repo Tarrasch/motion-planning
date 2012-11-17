@@ -72,8 +72,9 @@ ManipulationTab::ManipulationTab( wxWindow *parent, const wxWindowID id,
     mGreedyMode = false;
     mConnectMode = false;
     mSmooth = false;
-    mPlanner = NULL;
-
+    mFirstPlanner = NULL;
+    mSecondPlanner = NULL;
+    
     sizerIsFull = new wxBoxSizer( wxHORIZONTAL );
 
     // ** Create left static box for configuring the planner **
@@ -217,12 +218,12 @@ void ManipulationTab::OnButton(wxCommandEvent &evt) {
 
     /** Set Start */
   case button_SetStart:
-    if ( mWorld != NULL ) {
+    if ( mWorld != NULL) {
       if( mWorld->getNumRobots() < 1) {
 	std::cout << "(!) Must have a world with a robot to set a Start state" << std::endl;
 	break;
       }
-      std::cout << "(i) Setting Start state for " << mWorld->getRobot(mRobotId)->getName() << ":" << std::endl;
+      std::cout << "(i) Setting Start state for " << mWorld->getRobot(mRobotId)->getName() << " and " << mSelectedObject->getName() << std::endl;
 
       mStartConf = mWorld->getRobot(mRobotId)->getQuickDofs();
       if(mSelectedObject == NULL){
@@ -248,7 +249,7 @@ void ManipulationTab::OnButton(wxCommandEvent &evt) {
 	std::cout << "(!) Must have a world with a robot to set a Goal state.(!)" << std::endl;
 	break;
       }
-      std::cout << "(i) Setting Goal state for " << mWorld->getRobot(mRobotId)->getName() << ":" << std::endl;
+      std::cout << "(i) Setting Goal state for " << mSelectedObject->getName() << ":" << std::endl;
       
       //set goal for object; saved by reference in variables goal_x,y,z
       if(mSelectedObject == NULL){
@@ -294,12 +295,15 @@ void ManipulationTab::OnButton(wxCommandEvent &evt) {
     /** Reset Planner */
   case button_resetPlanner:
     if ( mWorld != NULL) {
-      if ( mPlanner != NULL)
-	delete mPlanner;
+      if ( mFirstPlanner != NULL && mSecondPlanner != NULL){
+	        delete mFirstPlanner;
+	        delete mSecondPlanner;
+	}
 
       std::cout << "Creating a new planner" << std::endl;
       double stepSize = 0.1; // default
-      mPlanner = new PathPlanner( *mWorld, false, stepSize );
+      mFirstPlanner = new PathPlanner( *mWorld, false, stepSize );
+      mSecondPlanner = new PathPlanner( *mWorld, false, stepSize );
     } else {
       std::cout << "(!) Must have a world loaded to make a planner" << std::endl;
     }
@@ -333,7 +337,9 @@ void ManipulationTab::OnButton(wxCommandEvent &evt) {
 
       double stepSize = 0.02;
       
-      mPlanner = new PathPlanner( *mWorld, false, stepSize );
+      mFirstPlanner = new PathPlanner( *mWorld, false, stepSize );
+      mSecondPlanner = new PathPlanner( *mWorld, false, stepSize );
+      
       mLinks = mWorld->getRobot(mRobotId)->getQuickDofsIndices();
       
       //get first goal configuration
@@ -349,23 +355,25 @@ void ManipulationTab::OnButton(wxCommandEvent &evt) {
       
       //get coordinates for robot start position
       Eigen::VectorXd startXYZ = goal_finder->GetXYZ(mStartConf);
-      Eigen::VectorXd mTargetXYZ;
-      mTargetXYZ.resize(3);
+      Eigen::VectorXd mPartialXYZ;
+      mPartialXYZ.resize(3);
       //calculate adjusted coordinates for target position,i.e, location of object
-	    mTargetXYZ << start_x, start_y, start_z; 
-      mTargetXYZ = (mTargetXYZ - startXYZ) * 0.8 + startXYZ;
+	    mPartialXYZ << start_x, start_y, start_z; 
+	    
+      mPartialXYZ = (mPartialXYZ - startXYZ) * 0.8 + startXYZ;
+      
       
       Eigen::VectorXd start = mStartConf;
       Eigen::VectorXd mPartialConf; 
  
       //find joint angles values given target position
-      if( goal_finder->GoToXYZ( start, mTargetXYZ ) == true ){
+      if( goal_finder->GoToXYZ( start, mPartialXYZ ) == true ){
 		       mPartialConf = start;
 		  }
 		  
 		  //perform initial plan to get to object
       int maxNodes = 5000;
-      bool result_first = mPlanner->planPath( mRobotId,
+      bool result_first = mFirstPlanner->planPath( mRobotId,
 					mLinks,
 					mStartConf,
 					mPartialConf,
@@ -374,16 +382,34 @@ void ManipulationTab::OnButton(wxCommandEvent &evt) {
 					mGreedyMode,
 					mSmooth,
 					maxNodes );
-	
-			bool result_second = true;/*mPlanner->planPath( mRobotId,
+			
+			Eigen::VectorXd mFinalXYZ;
+			mFinalXYZ.resize(3);
+			mFinalXYZ << goal_x, goal_y, goal_z;
+			Eigen::VectorXd mFinalConf;
+			
+			mFinalXYZ = (mFinalXYZ - mPartialXYZ) * 0.8 + mPartialXYZ;
+			PRINT("FINISHED FIRST PLANNING");
+			//attach object to end-effector
+			AttachObject();
+			
+			if( goal_finder->GoToXYZ(start, mFinalXYZ) == true){
+			   mFinalConf = start;
+			}
+			
+			//perform final plan to get to object
+			bool result_second = mSecondPlanner->planPath( mRobotId,
 					mLinks,
-					mStartConf,
-					mGoalConf,
+					mPartialConf,
+					mFinalConf,
 					mRrtStyle,
 					mConnectMode,
 					mGreedyMode,
 					mSmooth,
-					maxNodes );*/
+					maxNodes );
+			
+			PRINT(result_second);
+			PRINT("FINISHED SECOND PLANNING");
       if( result_first && result_second  )
 	{  SetTimeline(); }
     }
@@ -399,7 +425,7 @@ void ManipulationTab::OnButton(wxCommandEvent &evt) {
 
     /** Show Path */
   case button_ShowPath:
-    if( mWorld == NULL || mPlanner == NULL || mPlanner->path.size() == 0 ) {
+    if( mWorld == NULL || mFirstPlanner == NULL || mFirstPlanner->path.size() == 0 ) {
       std::cout << "(!) Must create a valid plan before printing."<<std::endl;
       return;
     } else {
@@ -425,7 +451,7 @@ void ManipulationTab::AttachObject(){
  */
 void ManipulationTab::SetTimeline() {
 
-    if( mWorld == NULL || mPlanner == NULL || mPlanner->path.size() == 0 ) {
+    if( mWorld == NULL || mFirstPlanner == NULL || mSecondPlanner == NULL || mFirstPlanner->path.size() == 0 || mSecondPlanner->path.size() == 0 ) {
         cout << "--(!) Must create a valid plan before updating its duration (!)--" << endl;
 	return;
     }
@@ -433,7 +459,7 @@ void ManipulationTab::SetTimeline() {
     double T;
     mTimeText->GetValue().ToDouble(&T);
 
-    int numsteps = mPlanner->path.size();
+    int numsteps = mFirstPlanner->path.size() + mSecondPlanner->path.size();
     double increment = T/(double)numsteps;
 
     cout << "-->(+) Updating Timeline - Increment: " << increment << " Total T: " << T << " Steps: " << numsteps << endl;
@@ -441,8 +467,17 @@ void ManipulationTab::SetTimeline() {
     frame->InitTimer( string("RRT_Plan"),increment );
 
     Eigen::VectorXd vals( mLinks.size() );
+    
+    //fill timeline first with first planner results
+    for( std::list<Eigen::VectorXd>::iterator it = mFirstPlanner->path.begin(); it != mFirstPlanner->path.end(); it++ ) {
 
-    for( std::list<Eigen::VectorXd>::iterator it = mPlanner->path.begin(); it != mPlanner->path.end(); it++ ) {
+        mWorld->getRobot( mRobotId)->setQuickDofs( *it );
+				mWorld->getRobot(mRobotId)->update();
+        
+        frame->AddWorld( mWorld );
+    }
+    //now, with second planner results
+    for( std::list<Eigen::VectorXd>::iterator it = mSecondPlanner->path.begin(); it != mSecondPlanner->path.end(); it++ ) {
 
         mWorld->getRobot( mRobotId)->setQuickDofs( *it );
 				mWorld->getRobot(mRobotId)->update();

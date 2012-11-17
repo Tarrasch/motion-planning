@@ -32,10 +32,6 @@ public:
     Eigen::VectorXd mStartConf;
     Eigen::VectorXd mGoalConf;
     
-    double start_x,start_y,start_z;
-    double goal_x,goal_y,goal_z;
-    robotics::Object* object;
-    
     int mRobotId;
     Eigen::VectorXi mLinks;
 
@@ -67,7 +63,6 @@ public:
     void OnCheckBox(wxCommandEvent &evt);
     void SetTimeline();
     void GRIPStateChange();
-    void AttachObject();
     
     // Thread specific
     // GRIPThread* thread;
