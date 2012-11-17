@@ -352,7 +352,7 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
       
       mLinks = mWorld->getRobot(mRobotId)->getQuickDofsIndices();
       
-      //get goalConf
+      /*get goalConf
       JTFollower *jt = new JTFollower(*mWorld); 
       int mNumLinks = mWorld->getRobot(mRobotId)->getNumQuickDofs(); 
       int EEDofId = mLinks( mNumLinks - 1 );
@@ -380,9 +380,9 @@ void RipPlannerTab::OnButton(wxCommandEvent &evt) {
 		       wsPath ) == true ){
 		       mPartialConf = wsPath.back();
 		       PRINT(wsPath.size());
-		  }
+		  }*/
 		  
-		  
+		  Eigen::VectorXd mPartialConf; 
       int maxNodes = 5000;
       bool result_first = mPlanner->planPath( mRobotId,
 					mLinks,

@@ -36,19 +36,15 @@
  *
  */	
 
-#ifndef _JT_FOLLOWER_H_
-#define _JT_FOLLOWER_H_
+#ifndef _JT_QUICKFIND_H_
+#define _JT_QUICKFIND_H_
 
 #include <iostream>
 #include <Eigen/Core>
 #include <vector>
 #include <robotics/World.h>
 
-/**
- * @class JTFollower
- * @brief Simple Follower with Jacobian Transpose
- */
-class JTFollower {
+class JTQuickFind {
 
 public:
 
@@ -63,7 +59,7 @@ public:
     int mEEId;
     int mMaxIter;
     
-    JTFollower( robotics::World &_world,
+    JTQuickFind( robotics::World &_world,
                 double _configStep = 0.1 ); // 0.046 = 1_degree * sqrt(7)
     
     void init( int _robotId,
@@ -73,21 +69,17 @@ public:
 	       double _res );
     
     /// Destructor
-    ~JTFollower();
+    ~JTQuickFind();
     
-    /// Planner itself
-    std::vector< Eigen::VectorXd > PlanPath( const Eigen::VectorXd &_start,  // Configuration,				     
-					     const std::vector<Eigen::VectorXd> &_workspacePath ); // Pose    
-    
-    Eigen::MatrixXd GetPseudoInvJac( Eigen::VectorXd _q ) ;
+    Eigen::MatrixXd GetPseudoInvJac() ;
     bool GoToXYZ( Eigen::VectorXd &_q, 
-		  Eigen::VectorXd _targetXYZ, 
-		  std::vector<Eigen::VectorXd> &_workspacePath );
+		  Eigen::VectorXd _targetXYZ);
+		  
     Eigen::VectorXd GetXYZ( Eigen::VectorXd _q );
     
  private:
 
 };
 
-#endif /** _JT_FOLLOWER_H_ */
+#endif /** _JT_QUICKFIND_H_ */
 
