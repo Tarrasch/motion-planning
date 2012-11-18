@@ -305,7 +305,59 @@ void PathPlanner::shortenPath( int _robotId,
 void PathPlanner::smoothPath( int _robotId,
     const Eigen::VectorXi &_links,
     std::list<Eigen::VectorXd> &_path ) {
-  // TODO
+
+  const int SPAN_SIZE = 9;
+
+  if(SPAN_SIZE%2>0){
+    PRINT(SPAN_SIZE);
+    std::cout << "SPAN_SIZE must be odd!!" << std::endl;
+  }
+
+  std::list<Eigen::VectorXd>::iterator beg_local = _path.begin();
+  std::list<Eigen::VectorXd>::iterator end_local = _path.begin();
+
+  {
+    int i = 0;
+    while(end_local != _path.end() && i < 9){
+      end_local++;
+    }
+  }
+
+  const Eigen::VectorXd IDENTITY_VECTOR((*beg_local).size()); // Identity under summation
+
+  while(end_local != _path.end()) {
+    // First setup three new useful vectors
+    std::list<Eigen::VectorXd>::iterator before_mid, mid, after_mid;
+    before_mid = beg_local;
+    for(int i = 0; i < SPAN_SIZE/2; i++) {
+      before_mid++;
+    }
+    mid = before_mid;
+    mid++;
+    after_mid = mid;
+    after_mid++;
+
+    // Ok, can we replace mid with the average instead?
+    Eigen::VectorXd candidate_new_mid =
+      accumulate(beg_local, end_local, IDENTITY_VECTOR)/double(SPAN_SIZE); // average
+    bool check_left = checkPathSegment(_robotId, _links, *before_mid, candidate_new_mid);
+    bool check_right = checkPathSegment(_robotId, _links, candidate_new_mid, *after_mid);
+    if(check_left && check_right) {
+      *mid = candidate_new_mid; // Replace original by average, if possible
+      std::cout << "Yay, one node got smoothed" << std::endl;
+    }
+    else{
+      std::cout << "Doh, one node didn't get smoothed (object was in the way)" << std::endl;
+      PRINT(check_left);
+      PRINT(check_right);
+
+    }
+
+    // Move ahead the local zoom
+    beg_local++;
+    end_local++;
+  }
+
 }
 
 /**
