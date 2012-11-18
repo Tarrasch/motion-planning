@@ -12,6 +12,7 @@
  */
 
 #include "PathPlanner.h"
+#define PRINT(x) std::cout << #x << " = " << x << std::endl;
 
 /**
  * @function PathPlanner
@@ -258,6 +259,10 @@ void PathPlanner::shortenPath( int _robotId,
   
   next = _path.begin();
   next++;
+  double stepSize = (*next - *start).norm() ; // Ok this assumes 2 elements but whatever
+
+  int num_inserted = 0; // Just for debug
+  int num_deleted = 0;  // Just for debug
   
   while(next != _path.end()){
     	std::list<Eigen::VectorXd>::iterator mid = next;
@@ -268,10 +273,29 @@ void PathPlanner::shortenPath( int _robotId,
     	if(check){
     	  _path.erase(mid);
     	  next++;
+        num_deleted++;
     	}
     	else{
-    	  start++;
+        // Remember how we assumed we can actually reach mid? Well lets
+        // add some intermediete points between start and mid!
+        const Eigen::VectorXd diff = *mid - *start;
+        const double dist = diff.norm();
+        const Eigen::VectorXd direction = diff*(stepSize/dist);
+        double i = 1;
+        while((*start+direction*(i+1e-6)).norm() < dist){
+          Eigen::VectorXd newVector = *start+direction*i;
+          _path.insert(mid, newVector);
+          i++;
+          num_inserted++;
+        }
+    	  start = mid;
     	  next++;
+
+        PRINT(num_inserted);
+        PRINT(num_deleted);
+        std::cout << "Note, num_inserted should be *almost* equal to num_deleted" << std::endl;
+        num_inserted = 0;
+        num_deleted = 0;
     	}
   }
   std::cout << "Path size after: "<< _path.size() << std::endl;
