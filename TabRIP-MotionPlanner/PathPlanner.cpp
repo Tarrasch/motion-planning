@@ -83,7 +83,7 @@ bool PathPlanner::planPath( int _robotId,
   }
 
   if( result && _smooth ) {
-    smoothPath( _robotId, _links, path );
+    shortenAndSmoothPath( _robotId, _links, path );
   }
 
   return result;
@@ -246,14 +246,10 @@ bool PathPlanner::checkPathSegment( int _robotId,
   return true;
 }
 
-/**
- * @function smoothPath
- */
-void PathPlanner::smoothPath( int _robotId,
-                              const Eigen::VectorXi &_links,
-                              std::list<Eigen::VectorXd> &_path ) {
+void PathPlanner::shortenPath( int _robotId,
+    const Eigen::VectorXi &_links,
+    std::list<Eigen::VectorXd> &_path ) {
 
-  //step 1: shortening
   std::cout << "Path size: "<< _path.size() << std::endl;
   std::list<Eigen::VectorXd>::iterator start;
   std::list<Eigen::VectorXd>::iterator next;
@@ -279,10 +275,23 @@ void PathPlanner::smoothPath( int _robotId,
     	}
   }
   std::cout << "Path size after: "<< _path.size() << std::endl;
-  //step 2: smoothing pending
-  
   return;
-  // ========================================
+}
+
+void PathPlanner::smoothPath( int _robotId,
+    const Eigen::VectorXi &_links,
+    std::list<Eigen::VectorXd> &_path ) {
+  // TODO
+}
+
+/**
+ * @function shortenAndSmoothPath
+ */
+void PathPlanner::shortenAndSmoothPath( int _robotId,
+    const Eigen::VectorXi &_links,
+    std::list<Eigen::VectorXd> &_path ) {
+  shortenPath(_robotId, _links, _path);
+  smoothPath(_robotId, _links, _path);
 }
 
 

@@ -63,6 +63,14 @@ class PathPlanner {
                      const Eigen::VectorXi &_links,
                      std::list<Eigen::VectorXd> &_path );
 
+    void shortenPath( int _robotId,
+                     const Eigen::VectorXi &_links,
+                     std::list<Eigen::VectorXd> &_path );
+
+    void shortenAndSmoothPath( int _robotId,
+                     const Eigen::VectorXi &_links,
+                     std::list<Eigen::VectorXd> &_path );
+
 
 private:
     /// Member variables
