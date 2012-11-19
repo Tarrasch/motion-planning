@@ -318,8 +318,9 @@ void PathPlanner::smoothPath( int _robotId,
 
   {
     int i = 0;
-    while(end_local != _path.end() && i < 9){
+    while(end_local != _path.end() && i < SPAN_SIZE){
       end_local++;
+      i++;
     }
   }
 
