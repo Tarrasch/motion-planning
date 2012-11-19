@@ -59,6 +59,11 @@ class PathPlanner {
                            const Eigen::VectorXd &_config1,
                            const Eigen::VectorXd &_config2 ) const;
 
+    bool checkPathSegment2( int _robotId,
+                           const Eigen::VectorXi &_links,
+                           const Eigen::VectorXd &_config1,
+                           const Eigen::VectorXd &_config2 ) const;
+
     void smoothPath( int _robotId,
                      const Eigen::VectorXi &_links,
                      std::list<Eigen::VectorXd> &_path );

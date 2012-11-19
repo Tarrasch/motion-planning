@@ -247,10 +247,28 @@ bool PathPlanner::checkPathSegment( int _robotId,
   return true;
 }
 
+bool PathPlanner::checkPathSegment2( int _robotId,
+                                    const Eigen::VectorXi &_links,
+                                    const Eigen::VectorXd &_config1,
+                                    const Eigen::VectorXd &_config2 ) const {
+
+  world->getRobot(_robotId)->setDofs( _config1, _links );
+  if( world->checkCollision() ) {
+    return false;
+  }
+  world->getRobot(_robotId)->setDofs( _config2, _links );
+  if( world->checkCollision() ) {
+    return false;
+  }
+  return checkPathSegment(_robotId, _links, _config1, _config2); // &&
+         // checkPathSegment(_robotId, _links, _config2, _config1);
+}
+
 void PathPlanner::shortenPath( int _robotId,
     const Eigen::VectorXi &_links,
     std::list<Eigen::VectorXd> &_path ) {
 
+  std::cout << "Ok, starting to do path shortening, may take a while!" << std::endl;
   std::cout << "Path size: "<< _path.size() << std::endl;
   std::list<Eigen::VectorXd>::iterator start;
   std::list<Eigen::VectorXd>::iterator next;
@@ -259,7 +277,6 @@ void PathPlanner::shortenPath( int _robotId,
   
   next = _path.begin();
   next++;
-  double stepSize = (*next - *start).norm() ; // Ok this assumes 2 elements but whatever
 
   int num_inserted = 0; // Just for debug
   int num_deleted = 0;  // Just for debug
@@ -269,9 +286,27 @@ void PathPlanner::shortenPath( int _robotId,
     // start. Not two!
     	std::list<Eigen::VectorXd>::iterator mid = next;
     	if(++next == _path.end()){
-    	  break;
+        // Sorry for code copy :(
+        std::cout << "Ok, are in last step of path shortening!" << std::endl;
+        const Eigen::VectorXd diff = *mid - *start;
+        const double dist = diff.norm();
+        const Eigen::VectorXd direction = diff*(stepSize/dist);
+        double i = 1;
+        while((*start+direction*(i+1e-6)).norm() < dist){
+          Eigen::VectorXd newVector = *start+direction*i;
+          _path.insert(mid, newVector);
+          i++;
+          num_inserted++;
+        }
+    	  start = mid;
+
+        PRINT(num_inserted);
+        PRINT(num_deleted);
+        std::cout << "Note, num_inserted should be *almost* equal to num_deleted" << std::endl;
+        num_inserted = 0;
+        num_deleted = 0;
     	}
-    	bool check = checkPathSegment(_robotId, _links, *start, *next);
+    	bool check = checkPathSegment2(_robotId, _links, *start, *next);
     	if(check){
     	  _path.erase(mid);
         num_deleted++;
@@ -341,14 +376,15 @@ void PathPlanner::smoothPath( int _robotId,
     // Ok, can we replace mid with the average instead?
     /* Eigen::VectorXd candidate_new_mid = */
     /*   accumulate(beg_local, end_local, IDENTITY_VECTOR)/double(SPAN_SIZE); // average */
-    Eigen::VectorXd candidate_new_mid = IDENTITY_VECTOR;
+    Eigen::VectorXd candidate_new_mid = *beg_local;
     std::list<Eigen::VectorXd>::iterator looper = beg_local;
+    looper++;
     while ( looper!=end_local )
       candidate_new_mid += *looper++;
     candidate_new_mid /= double(SPAN_SIZE);
 
-    bool check_left = checkPathSegment(_robotId, _links, *before_mid, candidate_new_mid);
-    bool check_right = checkPathSegment(_robotId, _links, candidate_new_mid, *after_mid);
+    bool check_left = checkPathSegment2(_robotId, _links, *before_mid, candidate_new_mid);
+    bool check_right = checkPathSegment2(_robotId, _links, candidate_new_mid, *after_mid);
     if(check_left && check_right) {
       *mid = candidate_new_mid; // Replace original by average, if possible
       std::cout << "Yay, one node got smoothed" << std::endl;
