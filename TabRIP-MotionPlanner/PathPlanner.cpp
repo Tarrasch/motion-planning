@@ -265,6 +265,8 @@ void PathPlanner::shortenPath( int _robotId,
   int num_deleted = 0;  // Just for debug
   
   while(next != _path.end()){
+    // NOTE: When entering this while loop, next should be one step ahead of
+    // start. Not two!
     	std::list<Eigen::VectorXd>::iterator mid = next;
     	if(++next == _path.end()){
     	  break;
@@ -272,7 +274,6 @@ void PathPlanner::shortenPath( int _robotId,
     	bool check = checkPathSegment(_robotId, _links, *start, *next);
     	if(check){
     	  _path.erase(mid);
-    	  next++;
         num_deleted++;
     	}
     	else{
@@ -289,7 +290,6 @@ void PathPlanner::shortenPath( int _robotId,
           num_inserted++;
         }
     	  start = mid;
-    	  next++;
 
         PRINT(num_inserted);
         PRINT(num_deleted);
