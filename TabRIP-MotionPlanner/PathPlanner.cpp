@@ -339,8 +339,14 @@ void PathPlanner::smoothPath( int _robotId,
     after_mid++;
 
     // Ok, can we replace mid with the average instead?
-    Eigen::VectorXd candidate_new_mid =
-      accumulate(beg_local, end_local, IDENTITY_VECTOR)/double(SPAN_SIZE); // average
+    /* Eigen::VectorXd candidate_new_mid = */
+    /*   accumulate(beg_local, end_local, IDENTITY_VECTOR)/double(SPAN_SIZE); // average */
+    Eigen::VectorXd candidate_new_mid = IDENTITY_VECTOR;
+    std::list<Eigen::VectorXd>::iterator looper = beg_local;
+    while ( looper!=end_local )
+      candidate_new_mid += *looper++;
+    candidate_new_mid /= double(SPAN_SIZE);
+
     bool check_left = checkPathSegment(_robotId, _links, *before_mid, candidate_new_mid);
     bool check_right = checkPathSegment(_robotId, _links, candidate_new_mid, *after_mid);
     if(check_left && check_right) {
