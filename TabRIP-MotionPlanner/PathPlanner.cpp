@@ -341,10 +341,14 @@ void PathPlanner::smoothPath( int _robotId,
       i++;
     }
   }
+  std::list<Eigen::VectorXd> replacements;
 
   const Eigen::VectorXd IDENTITY_VECTOR((*beg_local).size()); // Identity under summation
 
   while(end_local != _path.end()) {
+    // actually the while condition is slightly inaccurate because we want to
+    // do one more iteration, one where end_local == _path.end()
+
     // First setup three new useful vectors
     std::list<Eigen::VectorXd>::iterator before_mid, mid, after_mid;
     before_mid = beg_local;
@@ -369,11 +373,12 @@ void PathPlanner::smoothPath( int _robotId,
     bool check_left = checkPathSegment2(_robotId, _links, *before_mid, candidate_new_mid);
     bool check_right = checkPathSegment2(_robotId, _links, candidate_new_mid, *after_mid);
     if(check_left && check_right) {
-      *mid = candidate_new_mid; // Replace original by average, if possible
       std::cout << "Yay, one node got smoothed" << std::endl;
+      replacements.insert(replacements.end(), candidate_new_mid);
     }
     else{
       std::cout << "Doh, one node didn't get smoothed (object was in the way)" << std::endl;
+      replacements.insert(replacements.end(), *mid);
       PRINT(check_left);
       PRINT(check_right);
 
@@ -383,6 +388,13 @@ void PathPlanner::smoothPath( int _robotId,
     beg_local++;
     end_local++;
   }
+
+  // Now copy over all new elements
+  std::list<Eigen::VectorXd>::iterator start_mod_iterator = _path.begin();
+  for(int i = 0; i < SPAN_SIZE/2; i++) {
+    start_mod_iterator++;
+  }
+  std::copy(replacements.begin(), replacements.end(), start_mod_iterator);
 
 }
 
