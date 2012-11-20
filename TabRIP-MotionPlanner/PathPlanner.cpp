@@ -273,11 +273,9 @@ void PathPlanner::shortenPath( int _robotId,
 
   std::cout << "Ok, starting to do path shortening, may take a while!" << std::endl;
   std::cout << "Path size: "<< _path.size() << std::endl;
-  std::list<Eigen::VectorXd>::iterator start;
-  std::list<Eigen::VectorXd>::iterator next;
-  
+  std::list<Eigen::VectorXd>::iterator start, next;
+
   start = _path.begin();
-  
   next = _path.begin();
   next++;
 
@@ -288,41 +286,22 @@ void PathPlanner::shortenPath( int _robotId,
     // NOTE: When entering this while loop, next should be one step ahead of
     // start. Not two!
     	std::list<Eigen::VectorXd>::iterator mid = next;
-    	if(++next == _path.end()){
-        // Sorry for code copy :(
-        std::cout << "Ok, are in last step of path shortening!" << std::endl;
-        const Eigen::VectorXd diff = *mid - *start;
-        const double dist = diff.norm();
-        const Eigen::VectorXd direction = diff*(stepSize/dist);
-        double i = 1;
-        while((direction*(i+1e-6)).norm() < dist){
-          Eigen::VectorXd newVector = *start+direction*i;
-          _path.insert(mid, newVector);
-          i++;
-          num_inserted++;
-        }
-    	  start = mid;
-
-        PRINT(num_inserted);
-        PRINT(num_deleted);
-        std::cout << "Note, num_inserted should be *almost* equal to num_deleted" << std::endl;
-        num_inserted = 0;
-        num_deleted = 0;
-        break;
-    	}
-    	bool check = checkPathSegment2(_robotId, _links, *start, *next);
-    	if(check){
+      next++;
+    	if(next != _path.end() && checkPathSegment2(_robotId, _links, *start, *next)){
     	  _path.erase(mid);
         num_deleted++;
     	}
     	else{
         // Remember how we assumed we can actually reach mid? Well lets
         // add some intermediete points between start and mid!
+        if(next == _path.end()) {
+          std::cout << "Ok, are in last step of path shortening!" << std::endl;
+        }
         const Eigen::VectorXd diff = *mid - *start;
         const double dist = diff.norm();
         const Eigen::VectorXd direction = diff*(stepSize/dist);
         double i = 1;
-        while((*start+direction*(i+1e-6)).norm() < dist){
+        while((direction*(i+1e-6)).norm() < dist){
           Eigen::VectorXd newVector = *start+direction*i;
           _path.insert(mid, newVector);
           i++;
