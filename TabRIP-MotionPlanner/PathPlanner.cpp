@@ -308,6 +308,7 @@ void PathPlanner::shortenPath( int _robotId,
         std::cout << "Note, num_inserted should be *almost* equal to num_deleted" << std::endl;
         num_inserted = 0;
         num_deleted = 0;
+        break;
     	}
     	bool check = checkPathSegment2(_robotId, _links, *start, *next);
     	if(check){
