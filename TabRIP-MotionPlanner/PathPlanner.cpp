@@ -295,7 +295,7 @@ void PathPlanner::shortenPath( int _robotId,
         const double dist = diff.norm();
         const Eigen::VectorXd direction = diff*(stepSize/dist);
         double i = 1;
-        while((*start+direction*(i+1e-6)).norm() < dist){
+        while((direction*(i+1e-6)).norm() < dist){
           Eigen::VectorXd newVector = *start+direction*i;
           _path.insert(mid, newVector);
           i++;
